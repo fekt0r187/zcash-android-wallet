@@ -9,9 +9,9 @@ import cash.z.ecc.android.sdk.Initializer
 import cash.z.ecc.android.sdk.Synchronizer
 import cash.z.ecc.android.sdk.db.entity.PendingTransaction
 import cash.z.ecc.android.sdk.ext.ZcashSdk
-import cash.z.ecc.android.util.twig
 import cash.z.ecc.android.sdk.tool.DerivationTool
 import cash.z.ecc.android.sdk.type.WalletBalance
+import cash.z.ecc.android.util.twig
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runBlocking
@@ -59,9 +59,9 @@ class ProfileViewModel @Inject constructor() : ViewModel() {
 
     fun shieldFunds(): Flow<PendingTransaction> {
         return lockBox.getBytes(Const.Backup.SEED)?.let {
-            val sk = DerivationTool.deriveSpendingKeys(it, synchronizer.network)[0]
-            val tsk = DerivationTool.deriveTransparentSecretKey(it, synchronizer.network)
-            val addr = DerivationTool.deriveTransparentAddressFromPrivateKey(tsk, synchronizer.network)
+            val sk = runBlocking { DerivationTool.deriveSpendingKeys(it, synchronizer.network)[0] }
+            val tsk = runBlocking { DerivationTool.deriveTransparentSecretKey(it, synchronizer.network) }
+            val addr = runBlocking { DerivationTool.deriveTransparentAddressFromPrivateKey(tsk, synchronizer.network) }
             synchronizer.shieldFunds(sk, tsk, "${ZcashSdk.DEFAULT_SHIELD_FUNDS_MEMO_PREFIX}\nAll UTXOs from $addr").onEach {
                 twig("Received shielding txUpdate: ${it?.toString()}")
 //                updateMetrics(it)
@@ -85,7 +85,12 @@ class ProfileViewModel @Inject constructor() : ViewModel() {
     fun wipe() {
         synchronizer.stop()
         Toast.makeText(ZcashWalletApp.instance, "SUCCESS! Wallet data cleared. Please relaunch to rescan!", Toast.LENGTH_LONG).show()
-        Initializer.erase(ZcashWalletApp.instance, ZcashWalletApp.instance.defaultNetwork)
+        runBlocking {
+            Initializer.erase(
+                ZcashWalletApp.instance,
+                ZcashWalletApp.instance.defaultNetwork
+            )
+        }
     }
 
     suspend fun fullRescan() {

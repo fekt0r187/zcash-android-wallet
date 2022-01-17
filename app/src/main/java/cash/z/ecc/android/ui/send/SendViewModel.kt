@@ -31,15 +31,16 @@ import cash.z.ecc.android.sdk.db.entity.isFailedSubmit
 import cash.z.ecc.android.sdk.db.entity.isMined
 import cash.z.ecc.android.sdk.db.entity.isSubmitSuccess
 import cash.z.ecc.android.sdk.ext.ZcashSdk
-import cash.z.ecc.android.util.twig
 import cash.z.ecc.android.sdk.tool.DerivationTool
 import cash.z.ecc.android.sdk.type.AddressType
 import cash.z.ecc.android.ui.util.INCLUDE_MEMO_PREFIX_STANDARD
+import cash.z.ecc.android.util.twig
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.lang.IllegalArgumentException
 import javax.inject.Inject
@@ -75,10 +76,12 @@ class SendViewModel @Inject constructor() : ViewModel() {
     fun send(): Flow<PendingTransaction> {
         funnel(SendSelected)
         val memoToSend = createMemoToSend()
-        val keys = DerivationTool.deriveSpendingKeys(
-            lockBox.getBytes(Const.Backup.SEED)!!,
-            synchronizer.network
-        )
+        val keys = runBlocking {
+            DerivationTool.deriveSpendingKeys(
+                lockBox.getBytes(Const.Backup.SEED)!!,
+                synchronizer.network
+            )
+        }
         funnel(SpendingKeyFound)
         reportUserInputIssues(memoToSend)
         return synchronizer.sendToAddress(

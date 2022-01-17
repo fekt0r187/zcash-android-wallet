@@ -2,7 +2,8 @@ package cash.z.ecc.android.ui.util
 
 import cash.z.ecc.android.ZcashWalletApp
 import cash.z.ecc.android.util.TroubleshootingTwig
-import okio.Okio
+import okio.appendingSink
+import okio.buffer
 import java.io.File
 
 class DebugFileTwig(fileName: String = "developer_log.txt") : TroubleshootingTwig(formatter = spiffy(6)) {
@@ -14,7 +15,7 @@ class DebugFileTwig(fileName: String = "developer_log.txt") : TroubleshootingTwi
     }
 
     private fun appendToFile(message: String) {
-        Okio.buffer(Okio.appendingSink(file)).use {
+        file.appendingSink().buffer().use {
             it.writeUtf8("$message\n")
         }
     }

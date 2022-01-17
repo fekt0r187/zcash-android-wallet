@@ -1,7 +1,8 @@
 package cash.z.ecc.android.feedback
 
 import cash.z.ecc.android.ZcashWalletApp
-import okio.Okio
+import okio.appendingSink
+import okio.buffer
 import java.io.File
 import java.text.SimpleDateFormat
 
@@ -30,7 +31,7 @@ class FeedbackFile(fileName: String = "user_log.txt") :
     }
 
     private fun appendToFile(message: String) {
-        Okio.buffer(Okio.appendingSink(file)).use {
+        file.appendingSink().buffer().use {
             it.writeUtf8("${format.format(System.currentTimeMillis())}|\t$message\n")
         }
     }

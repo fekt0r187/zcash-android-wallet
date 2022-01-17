@@ -10,7 +10,6 @@ import cash.z.ecc.android.feedback.Report
 import cash.z.ecc.android.lockbox.LockBox
 import cash.z.ecc.android.sdk.Initializer
 import cash.z.ecc.android.sdk.exception.InitializerException
-import cash.z.ecc.android.util.twig
 import cash.z.ecc.android.sdk.tool.DerivationTool
 import cash.z.ecc.android.sdk.tool.WalletBirthdayTool
 import cash.z.ecc.android.sdk.type.UnifiedViewingKey
@@ -19,6 +18,7 @@ import cash.z.ecc.android.sdk.type.ZcashNetwork
 import cash.z.ecc.android.ui.setup.WalletSetupViewModel.WalletSetupState.NO_SEED
 import cash.z.ecc.android.ui.setup.WalletSetupViewModel.WalletSetupState.SEED_WITHOUT_BACKUP
 import cash.z.ecc.android.ui.setup.WalletSetupViewModel.WalletSetupState.SEED_WITH_BACKUP
+import cash.z.ecc.android.util.twig
 import cash.z.ecc.kotlin.mnemonic.Mnemonics
 import com.bugsnag.android.Bugsnag
 import kotlinx.coroutines.Dispatchers.IO
@@ -167,13 +167,17 @@ class WalletSetupViewModel @Inject constructor() : ViewModel() {
             }
     }
 
-    private fun onMissingBirthday(network: ZcashNetwork): Int = failWith(InitializerException.MissingBirthdayException) {
+    private suspend fun onMissingBirthday(network: ZcashNetwork): Int = failWith(InitializerException.MissingBirthdayException) {
         twig("Recover Birthday: falling back to sapling birthday")
         loadNearestBirthday(network, network.saplingActivationHeight).height
     }
 
-    private fun loadNearestBirthday(network: ZcashNetwork, birthdayHeight: Int? = null) =
-        WalletBirthdayTool.loadNearest(ZcashWalletApp.instance, network, birthdayHeight)
+    suspend fun loadNearestBirthday(network: ZcashNetwork, birthdayHeight: Int? = null) =
+        WalletBirthdayTool.loadNearest(
+            ZcashWalletApp.instance,
+            network,
+            birthdayHeight
+        )
 
     //
     // Storage Helpers
